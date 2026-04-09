@@ -321,6 +321,19 @@
                     <span class="stat-label">오답 (시간초과 포함)</span>
                     <span class="stat-val wrong-color" id="wrongCount">0</span>
                 </div>
+                <!-- 평균 RT 결과 추가 -->
+                <div class="stat-row" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                    <span class="stat-label">1글자 평균 RT</span>
+                    <span class="stat-val correct-color" id="avg1Display">-</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">2글자 평균 RT</span>
+                    <span class="stat-val correct-color" id="avg2Display">-</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">3글자 평균 RT</span>
+                    <span class="stat-val correct-color" id="avg3Display">-</span>
+                </div>
             </div>
 
             <button id="restartBtn">처음으로 돌아가기</button>
@@ -334,7 +347,7 @@
         const wordLists = {
             1: ["곰", "양", "뱀", "쥐", "개", "소", "말", "닭", "새", "매", "용", "벌", "게"],
             2: ["사자", "토끼", "기린", "악어", "오리", "하마", "여우", "참새", "돼지", "거북", "사슴", "낙타", "치타"],
-            3: ["코끼리", "얼룩말", "다람쥐", "너구리", "호랑이", "독수리", "두루미", "고양이", "두꺼비", "물개류", "강아지", "원숭이"]
+            3: ["코끼리", "얼룩말", "다람쥐", "너구리", "호랑이", "독수리", "두루미", "고양이", "두꺼비", "강아지", "원숭이"]
         };
 
         let currentWords = [];
@@ -381,6 +394,10 @@
         const correctCount = document.getElementById('correctCount');
         const wrongCount = document.getElementById('wrongCount');
         const resultMessage = document.getElementById('resultMessage');
+
+        const avg1Display = document.getElementById('avg1Display');
+        const avg2Display = document.getElementById('avg2Display');
+        const avg3Display = document.getElementById('avg3Display');
 
         playerNameInput.focus();
 
@@ -557,16 +574,45 @@
             clearInterval(timerInterval);
             const totalQuestions = totalRounds * wordsPerRound;
 
+            // 평균 RT 계산 (정답 피드백에 한해서만 계산)
+            let sumRT = { 1: 0, 2: 0, 3: 0 };
+            let countRT = { 1: 0, 2: 0, 3: 0 };
+            
+            trialData.forEach(t => {
+                if (t.isCorrect === '정답') {
+                    const roundNum = parseInt(t.condition.charAt(0));
+                    if (sumRT[roundNum] !== undefined) {
+                        sumRT[roundNum] += t.rt;
+                        countRT[roundNum]++;
+                    }
+                }
+            });
+
+            const avg1 = countRT[1] > 0 ? Math.round(sumRT[1] / countRT[1]) : 0;
+            const avg2 = countRT[2] > 0 ? Math.round(sumRT[2] / countRT[2]) : 0;
+            const avg3 = countRT[3] > 0 ? Math.round(sumRT[3] / countRT[3]) : 0;
+
             resultName.textContent = playerName;
             totalQuestionsDisplay.textContent = totalQuestions;
             correctCount.textContent = score;
             wrongCount.textContent = totalQuestions - score;
+
+            avg1Display.textContent = avg1 > 0 ? `${avg1} ms` : "기록없음";
+            avg2Display.textContent = avg2 > 0 ? `${avg2} ms` : "기록없음";
+            avg3Display.textContent = avg3 > 0 ? `${avg3} ms` : "기록없음";
 
             if (score === totalQuestions) resultMessage.textContent = "완벽합니다! 타자 마스터네요!";
             else if (score >= totalQuestions * 0.7) resultMessage.textContent = "수고하셨습니다! 결과가 저장 중입니다.";
             else resultMessage.textContent = "수고하셨습니다! 다음엔 더 잘할 수 있을 거예요!";
 
             switchScreen('resultScreen');
+
+            // trialData의 각 객체에 평균값 모두 삽입 (구글 시트 기록용)
+            trialData.forEach(t => {
+                t.avg1 = avg1 > 0 ? avg1 : "기록 없음";
+                t.avg2 = avg2 > 0 ? avg2 : "기록 없음";
+                t.avg3 = avg3 > 0 ? avg3 : "기록 없음";
+            });
 
             const trialsStr = JSON.stringify(trialData);
 
