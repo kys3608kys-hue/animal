@@ -470,7 +470,13 @@
             let userInput = wordInput.value.trim();
             if (userInput === "") userInput = "미입력";
 
-            trialData.push(`${words[currentWordIndex]}: ${isCorrect ? '정답' : '오답'}[${userInput}](${rt}ms)`);
+            trialData.push({
+                stimulus: words[currentWordIndex],
+                expected: words[currentWordIndex],
+                response: userInput,
+                isCorrect: isCorrect ? '정답' : '오답',
+                rt: rt
+            });
 
             wordInput.disabled = true;
 
@@ -508,13 +514,13 @@
 
             switchScreen('resultScreen');
 
-            const details = trialData.join(" / ");
+            const trialsStr = JSON.stringify(trialData);
 
             // 데이터를 구글 시트로 전송
-            saveDataToGoogleSheets(playerName, score, words.length - score, details);
+            saveDataToGoogleSheets(playerName, score, words.length - score, trialsStr);
         }
 
-        function saveDataToGoogleSheets(name, correct, wrong, details) {
+        function saveDataToGoogleSheets(name, correct, wrong, trialsStr) {
             if (scriptURL === "여기에_배포된_웹앱_URL을_붙여넣으세요" || !scriptURL) {
                 console.log("웹앱 URL이 설정되지 않아 데이터가 저장되지 않습니다.");
                 return;
@@ -524,7 +530,7 @@
             data.append('name', name);
             data.append('correct', correct);
             data.append('wrong', wrong);
-            data.append('details', details);
+            data.append('trials', trialsStr);
 
             const originalMsg = resultMessage.textContent;
             resultMessage.textContent = originalMsg + " (결과 저장 중...)";
