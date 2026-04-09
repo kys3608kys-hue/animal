@@ -336,9 +336,9 @@
             2: ["사자", "토끼", "기린", "악어", "오리", "하마", "여우", "참새", "돼지", "거북", "사슴", "낙타", "치타"],
             3: ["코끼리", "얼룩말", "다람쥐", "너구리", "호랑이", "독수리", "두루미", "고양이", "두꺼비", "물개류", "강아지", "원숭이"]
         };
-        
+
         let currentWords = [];
-        let currentRound = 1; 
+        let currentRound = 1;
         const totalRounds = 3;
         const wordsPerRound = 5;
 
@@ -354,7 +354,7 @@
         let trialData = [];
 
         // 구글 앱스 스크립트 웹앱 주소
-        const scriptURL = "https://script.google.com/macros/s/AKfycbya1299FdHh3UthDyqOOokjH-95dC_-iziy1b54KnmE4ybx0XtK6ImPyadzHqkzkpAY0Q/exec";
+        const scriptURL = "https://script.google.com/macros/s/AKfycbw8jqDY8lqikJ4DOIfBfprYnYUN_erP4RBVoygclHoTH73lxdut3IH1doiLGLsjy1HPjA/exec";
 
         const startScreen = document.getElementById('startScreen');
         const roundScreen = document.getElementById('roundScreen');
@@ -389,12 +389,12 @@
         });
 
         startBtn.addEventListener('click', startGame);
-        
+
         startRoundBtn.addEventListener('click', () => {
             switchScreen('gameScreen');
             nextWord();
         });
-        
+
         restartBtn.addEventListener('click', resetGame);
 
         wordInput.addEventListener('keydown', (e) => {
@@ -440,12 +440,12 @@
             list.sort(() => Math.random() - 0.5);
             // wordsPerRound(5개) 만큼 추출
             currentWords = list.slice(0, wordsPerRound);
-            
+
             currentWordIndex = 0;
-            
+
             roundTitle.textContent = `라운드 ${currentRound}`;
             roundSubtitle.innerHTML = `${currentRound}글자 동물 타자 연습입니다.<br>준비되셨나요?`;
-            
+
             switchScreen('roundScreen');
         }
 
@@ -556,7 +556,7 @@
         function endGame() {
             clearInterval(timerInterval);
             const totalQuestions = totalRounds * wordsPerRound;
-            
+
             resultName.textContent = playerName;
             totalQuestionsDisplay.textContent = totalQuestions;
             correctCount.textContent = score;
