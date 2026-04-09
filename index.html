@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>동물 타자 연습</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap');
+
+        :root {
+            --bg-color: #0f172a;
+            --container-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --accent: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
+            background-size: cover;
+            background-position: center;
+        }
+
+        .container {
+            background: var(--container-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.6);
+            color: white;
+            font-size: 18px;
+            outline: none;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            text-align: center;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.23);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        /* Game Screen Styles */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: bold;
+        }
+
+        .word-display {
+            font-size: 56px;
+            font-weight: 700;
+            margin: 20px 0 40px;
+            letter-spacing: 2px;
+            color: white;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .timer-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .timer-bar {
+            height: 100%;
+            background: var(--accent);
+            width: 100%;
+            border-radius: 10px;
+            transition: width 0.1s linear, background-color 0.3s;
+        }
+
+        .timer-bar.warning {
+            background: var(--warning);
+        }
+
+        .timer-bar.danger {
+            background: var(--danger);
+        }
+
+        .feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            font-weight: bold;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes popOut {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0;
+            }
+        }
+
+        .feedback.correct {
+            color: var(--accent);
+            text-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
+        }
+
+        .feedback.wrong {
+            color: var(--danger);
+            text-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+        }
+
+        /* Result Screen */
+        .result-stats {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 17px;
+        }
+
+        .stat-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+        }
+
+        .stat-val {
+            font-weight: bold;
+        }
+
+        .correct-color {
+            color: var(--accent);
+        }
+
+        .wrong-color {
+            color: var(--danger);
+        }
+
+        #wordInput:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: rgba(15, 23, 42, 0.8);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen active">
+            <h1>동물 타자 게임</h1>
+            <p class="subtitle">5초 안에 동물이름을 입력하세요!</p>
+            <input type="text" id="playerName" placeholder="참가자 이름을 입력해주세요" autocomplete="off">
+            <button id="startBtn">게임 시작하기</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen">
+            <div class="status-bar">
+                <span id="playerDisplay">참가자: -</span>
+                <span id="progressDisplay">1 / 5</span>
+            </div>
+
+            <div class="timer-container">
+                <div id="timerBar" class="timer-bar"></div>
+            </div>
+
+            <div id="targetWord" class="word-display">사자</div>
+
+            <input type="text" id="wordInput" placeholder="여기에 입력하세요" autocomplete="off">
+            <p class="subtitle" style="margin-bottom: 0; font-size: 13px;">입력 후 Enter를 누르거나 정확히 입력하면 넘어갑니다</p>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="resultScreen" class="screen">
+            <h1>결과 확인</h1>
+            <p class="subtitle" id="resultMessage">수고하셨습니다!</p>
+
+            <div class="result-stats">
+                <div class="stat-row">
+                    <span class="stat-label">참가자</span>
+                    <span class="stat-val" id="resultName"></span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">총 문제</span>
+                    <span class="stat-val">5</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">정답</span>
+                    <span class="stat-val correct-color" id="correctCount">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">오답 (시간초과 포함)</span>
+                    <span class="stat-val wrong-color" id="wrongCount">0</span>
+                </div>
+            </div>
+
+            <button id="restartBtn">처음으로 돌아가기</button>
+        </div>
+
+        <!-- Animation feedback -->
+        <div id="feedback" class="feedback">⭕</div>
+    </div>
+
+    <script>
+        const words = ["사자", "뱀", "기린", "악어", "오리"];
+        let currentWordIndex = 0;
+        let score = 0;
+        let timerInterval;
+        let timeRemaining = 5000;
+        const totalTime = 5000;
+        let playerName = "";
+        let isProcessing = false;
+
+        let wordStartTime = 0;
+        let trialData = [];
+
+        // 구글 앱스 스크립트 웹앱 주소 (아래에 배포된 URL을 넣어주세요)
+        const scriptURL = "https://script.google.com/macros/s/AKfycbxjcE7TajqfijUNtWT6EoJQ6vmt-ZnjyqTn5OcmJV5JPUWYUH5GBN_APUNhITt6Z_APJQ/exec";
+
+        const startScreen = document.getElementById('startScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const resultScreen = document.getElementById('resultScreen');
+
+        const playerNameInput = document.getElementById('playerName');
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+
+        const playerDisplay = document.getElementById('playerDisplay');
+        const progressDisplay = document.getElementById('progressDisplay');
+        const timerBar = document.getElementById('timerBar');
+        const targetWord = document.getElementById('targetWord');
+        const wordInput = document.getElementById('wordInput');
+        const feedback = document.getElementById('feedback');
+
+        const resultName = document.getElementById('resultName');
+        const correctCount = document.getElementById('correctCount');
+        const wrongCount = document.getElementById('wrongCount');
+        const resultMessage = document.getElementById('resultMessage');
+
+        playerNameInput.focus();
+
+        playerNameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') startBtn.click();
+        });
+
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', resetGame);
+
+        wordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !isProcessing) {
+                if (wordInput.value.trim() === words[currentWordIndex]) {
+                    processResult(true);
+                } else {
+                    processResult(false);
+                }
+            }
+        });
+
+        wordInput.addEventListener('input', () => {
+            if (!isProcessing && wordInput.value.trim() === words[currentWordIndex]) {
+                processResult(true);
+            }
+        });
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startGame() {
+            playerName = playerNameInput.value.trim();
+            if (!playerName) {
+                alert("참가자 이름을 입력해주세요!");
+                playerNameInput.focus();
+                return;
+            }
+
+            playerDisplay.textContent = `참가자: ${playerName}`;
+            currentWordIndex = 0;
+            score = 0;
+            trialData = [];
+
+            switchScreen('gameScreen');
+            nextWord();
+        }
+
+        function nextWord() {
+            if (currentWordIndex >= words.length) {
+                endGame();
+                return;
+            }
+
+            isProcessing = false;
+            wordInput.value = "";
+            wordInput.disabled = false;
+            targetWord.textContent = words[currentWordIndex];
+            progressDisplay.textContent = `${currentWordIndex + 1} / ${words.length}`;
+
+            wordInput.focus();
+            wordStartTime = Date.now();
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeRemaining = totalTime;
+            updateTimerVisuals();
+
+            const updateRate = 20;
+            timerInterval = setInterval(() => {
+                timeRemaining -= updateRate;
+
+                if (timeRemaining <= 0) {
+                    timeRemaining = 0;
+                    updateTimerVisuals();
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                } else {
+                    updateTimerVisuals();
+                }
+            }, updateRate);
+        }
+
+        function updateTimerVisuals() {
+            const percentage = (timeRemaining / totalTime) * 100;
+            timerBar.style.width = `${percentage}%`;
+
+            timerBar.className = 'timer-bar';
+            if (percentage < 30) {
+                timerBar.classList.add('danger');
+            } else if (percentage < 60) {
+                timerBar.classList.add('warning');
+            }
+        }
+
+        function handleTimeout() {
+            if (isProcessing) return;
+            wordInput.value = "시간초과";
+            processResult(false);
+        }
+
+        function processResult(isCorrect) {
+            if (isProcessing) return;
+            isProcessing = true;
+            clearInterval(timerInterval);
+
+            const rt = Date.now() - wordStartTime;
+            let userInput = wordInput.value.trim();
+            if (userInput === "") userInput = "미입력";
+
+            trialData.push(`${words[currentWordIndex]}: ${isCorrect ? '정답' : '오답'}[${userInput}](${rt}ms)`);
+
+            wordInput.disabled = true;
+
+            if (isCorrect) {
+                score++;
+                showFeedback(true);
+            } else {
+                showFeedback(false);
+            }
+
+            setTimeout(() => {
+                currentWordIndex++;
+                nextWord();
+            }, 800);
+        }
+
+        function showFeedback(isCorrect) {
+            feedback.textContent = isCorrect ? "⭕" : "❌";
+            feedback.className = `feedback ${isCorrect ? 'correct' : 'wrong'}`;
+
+            feedback.style.animation = 'none';
+            feedback.offsetHeight;
+            feedback.style.animation = 'popOut 0.8s ease-out forwards';
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            resultName.textContent = playerName;
+            correctCount.textContent = score;
+            wrongCount.textContent = words.length - score;
+
+            if (score === words.length) resultMessage.textContent = "완벽합니다! 타자 마스터네요!";
+            else if (score >= 3) resultMessage.textContent = "잘하셨어요! 조금만 더 연습해봐요!";
+            else resultMessage.textContent = "다음엔 더 잘할 수 있을 거예요 화이팅!";
+
+            switchScreen('resultScreen');
+
+            const details = trialData.join(" / ");
+
+            // 데이터를 구글 시트로 전송
+            saveDataToGoogleSheets(playerName, score, words.length - score, details);
+        }
+
+        function saveDataToGoogleSheets(name, correct, wrong, details) {
+            if (scriptURL === "여기에_배포된_웹앱_URL을_붙여넣으세요" || !scriptURL) {
+                console.log("웹앱 URL이 설정되지 않아 데이터가 저장되지 않습니다.");
+                return;
+            }
+
+            const data = new URLSearchParams();
+            data.append('name', name);
+            data.append('correct', correct);
+            data.append('wrong', wrong);
+            data.append('details', details);
+
+            const originalMsg = resultMessage.textContent;
+            resultMessage.textContent = originalMsg + " (결과 저장 중...)";
+
+            fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: data
+            })
+                .then(() => {
+                    console.log('데이터 전송 완료');
+                    resultMessage.textContent = originalMsg + " (결과 저장 완료!)";
+                })
+                .catch(error => {
+                    console.error('Error!', error.message);
+                    resultMessage.textContent = originalMsg + " (결과 저장 실패)";
+                });
+        }
+
+        function resetGame() {
+            playerNameInput.value = "";
+            switchScreen('startScreen');
+            playerNameInput.focus();
+        }
+    </script>
+</body>
+
+</html>
