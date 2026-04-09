@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>동물 타자 연습</title>
+    <title>동물 타자 연습 (실험)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap');
 
@@ -269,24 +269,31 @@
     <div class="container">
         <!-- Start Screen -->
         <div id="startScreen" class="screen active">
-            <h1>동물 타자 게임</h1>
-            <p class="subtitle">5초 안에 동물이름을 입력하세요!</p>
+            <h1>동물 타자 연습 (실험)</h1>
+            <p class="subtitle">글자 수에 따른 타자 반응속도 측정 실험<br>총 3개의 라운드로 진행됩니다.</p>
             <input type="text" id="playerName" placeholder="참가자 이름을 입력해주세요" autocomplete="off">
-            <button id="startBtn">게임 시작하기</button>
+            <button id="startBtn">실험 시작하기</button>
+        </div>
+
+        <!-- Round Screen -->
+        <div id="roundScreen" class="screen">
+            <h1 id="roundTitle">라운드 1</h1>
+            <p class="subtitle" id="roundSubtitle">1글자 동물 타자 연습입니다.<br>준비되셨나요?</p>
+            <button id="startRoundBtn">라운드 시작</button>
         </div>
 
         <!-- Game Screen -->
         <div id="gameScreen" class="screen">
             <div class="status-bar">
                 <span id="playerDisplay">참가자: -</span>
-                <span id="progressDisplay">1 / 5</span>
+                <span id="progressDisplay">라운드 1 | 1 / 5</span>
             </div>
 
             <div class="timer-container">
                 <div id="timerBar" class="timer-bar"></div>
             </div>
 
-            <div id="targetWord" class="word-display">사자</div>
+            <div id="targetWord" class="word-display">-</div>
 
             <input type="text" id="wordInput" placeholder="여기에 입력하세요" autocomplete="off">
             <p class="subtitle" style="margin-bottom: 0; font-size: 13px;">입력 후 Enter를 누르거나 정확히 입력하면 넘어갑니다</p>
@@ -294,8 +301,8 @@
 
         <!-- Result Screen -->
         <div id="resultScreen" class="screen">
-            <h1>결과 확인</h1>
-            <p class="subtitle" id="resultMessage">수고하셨습니다!</p>
+            <h1>실험 종료</h1>
+            <p class="subtitle" id="resultMessage">모든 라운드를 완료했습니다. 수고하셨습니다!</p>
 
             <div class="result-stats">
                 <div class="stat-row">
@@ -304,7 +311,7 @@
                 </div>
                 <div class="stat-row">
                     <span class="stat-label">총 문제</span>
-                    <span class="stat-val">5</span>
+                    <span class="stat-val" id="totalQuestionsDisplay">15</span>
                 </div>
                 <div class="stat-row">
                     <span class="stat-label">정답</span>
@@ -324,7 +331,17 @@
     </div>
 
     <script>
-        const words = ["사자", "뱀", "기린", "악어", "오리"];
+        const wordLists = {
+            1: ["곰", "양", "뱀", "쥐", "개", "소", "말", "닭", "새", "매", "용", "벌", "게"],
+            2: ["사자", "토끼", "기린", "악어", "오리", "하마", "여우", "참새", "돼지", "거북", "사슴", "낙타", "치타"],
+            3: ["코끼리", "얼룩말", "다람쥐", "너구리", "호랑이", "독수리", "두루미", "고양이", "두꺼비", "물개류", "강아지", "원숭이"]
+        };
+        
+        let currentWords = [];
+        let currentRound = 1; 
+        const totalRounds = 3;
+        const wordsPerRound = 5;
+
         let currentWordIndex = 0;
         let score = 0;
         let timerInterval;
@@ -336,16 +353,21 @@
         let wordStartTime = 0;
         let trialData = [];
 
-        // 구글 앱스 스크립트 웹앱 주소 (아래에 배포된 URL을 넣어주세요)
+        // 구글 앱스 스크립트 웹앱 주소
         const scriptURL = "https://script.google.com/macros/s/AKfycbya1299FdHh3UthDyqOOokjH-95dC_-iziy1b54KnmE4ybx0XtK6ImPyadzHqkzkpAY0Q/exec";
 
         const startScreen = document.getElementById('startScreen');
+        const roundScreen = document.getElementById('roundScreen');
         const gameScreen = document.getElementById('gameScreen');
         const resultScreen = document.getElementById('resultScreen');
 
         const playerNameInput = document.getElementById('playerName');
         const startBtn = document.getElementById('startBtn');
+        const startRoundBtn = document.getElementById('startRoundBtn');
         const restartBtn = document.getElementById('restartBtn');
+
+        const roundTitle = document.getElementById('roundTitle');
+        const roundSubtitle = document.getElementById('roundSubtitle');
 
         const playerDisplay = document.getElementById('playerDisplay');
         const progressDisplay = document.getElementById('progressDisplay');
@@ -355,6 +377,7 @@
         const feedback = document.getElementById('feedback');
 
         const resultName = document.getElementById('resultName');
+        const totalQuestionsDisplay = document.getElementById('totalQuestionsDisplay');
         const correctCount = document.getElementById('correctCount');
         const wrongCount = document.getElementById('wrongCount');
         const resultMessage = document.getElementById('resultMessage');
@@ -366,11 +389,17 @@
         });
 
         startBtn.addEventListener('click', startGame);
+        
+        startRoundBtn.addEventListener('click', () => {
+            switchScreen('gameScreen');
+            nextWord();
+        });
+        
         restartBtn.addEventListener('click', resetGame);
 
         wordInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !isProcessing) {
-                if (wordInput.value.trim() === words[currentWordIndex]) {
+                if (wordInput.value.trim() === currentWords[currentWordIndex]) {
                     processResult(true);
                 } else {
                     processResult(false);
@@ -379,7 +408,7 @@
         });
 
         wordInput.addEventListener('input', () => {
-            if (!isProcessing && wordInput.value.trim() === words[currentWordIndex]) {
+            if (!isProcessing && wordInput.value.trim() === currentWords[currentWordIndex]) {
                 processResult(true);
             }
         });
@@ -398,25 +427,46 @@
             }
 
             playerDisplay.textContent = `참가자: ${playerName}`;
-            currentWordIndex = 0;
+            currentRound = 1;
             score = 0;
             trialData = [];
 
-            switchScreen('gameScreen');
-            nextWord();
+            prepareRound();
+        }
+
+        function prepareRound() {
+            // 이번 라운드의 단어 배열을 가져와서 섞음
+            let list = [...wordLists[currentRound]];
+            list.sort(() => Math.random() - 0.5);
+            // wordsPerRound(5개) 만큼 추출
+            currentWords = list.slice(0, wordsPerRound);
+            
+            currentWordIndex = 0;
+            
+            roundTitle.textContent = `라운드 ${currentRound}`;
+            roundSubtitle.innerHTML = `${currentRound}글자 동물 타자 연습입니다.<br>준비되셨나요?`;
+            
+            switchScreen('roundScreen');
         }
 
         function nextWord() {
-            if (currentWordIndex >= words.length) {
-                endGame();
+            if (currentWordIndex >= currentWords.length) {
+                // 라운드 종료
+                if (currentRound < totalRounds) {
+                    currentRound++;
+                    prepareRound();
+                } else {
+                    // 모든 라운드 종료
+                    endGame();
+                }
                 return;
             }
 
             isProcessing = false;
             wordInput.value = "";
             wordInput.disabled = false;
-            targetWord.textContent = words[currentWordIndex];
-            progressDisplay.textContent = `${currentWordIndex + 1} / ${words.length}`;
+            targetWord.textContent = currentWords[currentWordIndex];
+            progressDisplay.textContent = `라운드 ${currentRound} | ${currentWordIndex + 1} / ${currentWords.length}`;
 
             wordInput.focus();
             wordStartTime = Date.now();
@@ -471,8 +521,9 @@
             if (userInput === "") userInput = "미입력";
 
             trialData.push({
-                stimulus: words[currentWordIndex],
-                expected: words[currentWordIndex],
+                condition: `${currentRound}글자`,
+                stimulus: currentWords[currentWordIndex],
+                expected: currentWords[currentWordIndex],
                 response: userInput,
                 isCorrect: isCorrect ? '정답' : '오답',
                 rt: rt
@@ -504,20 +555,23 @@
 
         function endGame() {
             clearInterval(timerInterval);
+            const totalQuestions = totalRounds * wordsPerRound;
+            
             resultName.textContent = playerName;
+            totalQuestionsDisplay.textContent = totalQuestions;
             correctCount.textContent = score;
-            wrongCount.textContent = words.length - score;
+            wrongCount.textContent = totalQuestions - score;
 
-            if (score === words.length) resultMessage.textContent = "완벽합니다! 타자 마스터네요!";
-            else if (score >= 3) resultMessage.textContent = "잘하셨어요! 조금만 더 연습해봐요!";
-            else resultMessage.textContent = "다음엔 더 잘할 수 있을 거예요 화이팅!";
+            if (score === totalQuestions) resultMessage.textContent = "완벽합니다! 타자 마스터네요!";
+            else if (score >= totalQuestions * 0.7) resultMessage.textContent = "수고하셨습니다! 결과가 저장 중입니다.";
+            else resultMessage.textContent = "수고하셨습니다! 다음엔 더 잘할 수 있을 거예요!";
 
             switchScreen('resultScreen');
 
             const trialsStr = JSON.stringify(trialData);
 
             // 데이터를 구글 시트로 전송
-            saveDataToGoogleSheets(playerName, score, words.length - score, trialsStr);
+            saveDataToGoogleSheets(playerName, score, totalQuestions - score, trialsStr);
         }
 
         function saveDataToGoogleSheets(name, correct, wrong, trialsStr) {
