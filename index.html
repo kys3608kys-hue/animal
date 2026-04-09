@@ -322,7 +322,8 @@
                     <span class="stat-val wrong-color" id="wrongCount">0</span>
                 </div>
                 <!-- 평균 RT 결과 추가 -->
-                <div class="stat-row" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                <div class="stat-row"
+                    style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
                     <span class="stat-label">1글자 평균 RT</span>
                     <span class="stat-val correct-color" id="avg1Display">-</span>
                 </div>
@@ -367,7 +368,7 @@
         let trialData = [];
 
         // 구글 앱스 스크립트 웹앱 주소
-        const scriptURL = "https://script.google.com/macros/s/AKfycbw8jqDY8lqikJ4DOIfBfprYnYUN_erP4RBVoygclHoTH73lxdut3IH1doiLGLsjy1HPjA/exec";
+        const scriptURL = "https://script.google.com/macros/s/AKfycbymmd1KM3lQDPU4JfICUGpJ7GL09jllGiD8FMMdL1YBbyW1ImVkmoUn8PZ7SBVHItZZng/exec";
 
         const startScreen = document.getElementById('startScreen');
         const roundScreen = document.getElementById('roundScreen');
@@ -577,7 +578,7 @@
             // 평균 RT 계산 (정답 피드백에 한해서만 계산)
             let sumRT = { 1: 0, 2: 0, 3: 0 };
             let countRT = { 1: 0, 2: 0, 3: 0 };
-            
+
             trialData.forEach(t => {
                 if (t.isCorrect === '정답') {
                     const roundNum = parseInt(t.condition.charAt(0));
